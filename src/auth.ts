@@ -1,13 +1,13 @@
-import { randomBytes } from "crypto";
-import jwt from "jsonwebtoken";
-import type { JwtPayload } from "jsonwebtoken";
-import { UserNotAuthenticatedError } from "./api/errors";
+import { randomBytes } from 'crypto';
+import jwt from 'jsonwebtoken';
+import type { JwtPayload } from 'jsonwebtoken';
+import { UserNotAuthenticatedError } from './api/errors';
 
-export const ACCESS_TOKEN_ISSUER = "tubely-access";
+export const ACCESS_TOKEN_ISSUER = 'tubely-access';
 
 export async function hashPassword(password: string) {
   return await Bun.password.hash(password, {
-    algorithm: "argon2id",
+    algorithm: 'argon2id',
   });
 }
 
@@ -20,7 +20,7 @@ export async function checkPasswordHash(password: string, hash: string) {
   }
 }
 
-type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;
+type payload = Pick<JwtPayload, 'iss' | 'sub' | 'iat' | 'exp'>;
 
 export function makeJWT(userID: string, secret: string, expiresIn: number) {
   const issuedAt = Math.floor(Date.now() / 1000);
@@ -33,7 +33,7 @@ export function makeJWT(userID: string, secret: string, expiresIn: number) {
       exp: expiresAt,
     } satisfies payload,
     secret,
-    { algorithm: "HS256" },
+    { algorithm: 'HS256' },
   );
 
   return token;
@@ -43,30 +43,30 @@ export function validateJWT(tokenString: string, tokenSecret: string) {
   const decoded = jwt.verify(tokenString, tokenSecret) as jwt.JwtPayload;
 
   if (decoded.iss !== ACCESS_TOKEN_ISSUER) {
-    throw new UserNotAuthenticatedError("Invalid issuer");
+    throw new UserNotAuthenticatedError('Invalid issuer');
   }
 
   const userID = decoded.sub;
   if (!userID) {
-    throw new UserNotAuthenticatedError("Missing subject (user ID)");
+    throw new UserNotAuthenticatedError('Missing subject (user ID)');
   }
   return userID;
 }
 
 export function getBearerToken(headers: Headers) {
-  const authHeader = headers.get("Authorization");
+  const authHeader = headers.get('Authorization');
   if (!authHeader) {
-    throw new UserNotAuthenticatedError("Missing Authorization Header");
+    throw new UserNotAuthenticatedError('Missing Authorization Header');
   }
 
-  const split = authHeader.split(" ");
-  if (split.length < 2 || split[0] !== "Bearer") {
-    throw new UserNotAuthenticatedError("Malformed Authorization header");
+  const split = authHeader.split(' ');
+  if (split.length < 2 || split[0] !== 'Bearer') {
+    throw new UserNotAuthenticatedError('Malformed Authorization header');
   }
   return split[1];
 }
 
 export function makeRefreshToken(): string {
   const buf = randomBytes(32);
-  return buf.toString("hex");
+  return buf.toString('hex');
 }
