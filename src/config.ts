@@ -1,5 +1,5 @@
-import { newDatabase } from "./db/db";
-import type { Database } from "bun:sqlite";
+import { newDatabase } from './db/db';
+import type { Database } from 'bun:sqlite';
 
 export type ApiConfig = {
   db: Database;
@@ -11,17 +11,19 @@ export type ApiConfig = {
   s3Region: string;
   s3CfDistribution: string;
   port: string;
+  baseUrl: string;
 };
 
-const pathToDB = envOrThrow("DB_PATH");
-const jwtSecret = envOrThrow("JWT_SECRET");
-const platform = envOrThrow("PLATFORM");
-const filepathRoot = envOrThrow("FILEPATH_ROOT");
-const assetsRoot = envOrThrow("ASSETS_ROOT");
-const s3Bucket = envOrThrow("S3_BUCKET");
-const s3Region = envOrThrow("S3_REGION");
-const s3CfDistribution = envOrThrow("S3_CF_DISTRO");
-const port = envOrThrow("PORT");
+const pathToDB = envOrThrow('DB_PATH');
+const jwtSecret = envOrThrow('JWT_SECRET');
+const platform = envOrThrow('PLATFORM');
+const filepathRoot = envOrThrow('FILEPATH_ROOT');
+const assetsRoot = envOrThrow('ASSETS_ROOT');
+const s3Bucket = envOrThrow('S3_BUCKET');
+const s3Region = envOrThrow('S3_REGION');
+const s3CfDistribution = envOrThrow('S3_CF_DISTRO');
+const port = envOrThrow('PORT');
+const baseUrl = envOrThrow('BASE_URL');
 
 const db = newDatabase(pathToDB);
 
@@ -35,6 +37,7 @@ export const cfg: ApiConfig = {
   s3Region: s3Region,
   s3CfDistribution: s3CfDistribution,
   port: port,
+  baseUrl: baseUrl,
 };
 
 function envOrThrow(key: string) {

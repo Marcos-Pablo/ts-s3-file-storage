@@ -8,6 +8,7 @@ import path from 'path';
 import { mediaTypeToExt } from './assets';
 
 const MAX_UPLOAD_SIZE = 10 << 20;
+const ALLOWED_EXTENSIONS = ['image/jpeg', 'image/png'];
 
 export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   const { videoId } = req.params as { videoId?: string };
@@ -39,8 +40,8 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   }
 
   const mediaType = file.type;
-  if (!mediaType) {
-    throw new BadRequestError('Missing Content-Type for thumbnail');
+  if (!mediaType || !ALLOWED_EXTENSIONS.includes(mediaType)) {
+    throw new BadRequestError('Missing or invalid media type. Only JPEG or PNG allowed');
   }
   const fileExtension = mediaTypeToExt(mediaType);
 
@@ -54,7 +55,7 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
 
   await Bun.write(filePath, fileData);
 
-  videoMetaData.thumbnailURL = `http://localhost:${cfg.port}/${filePath}`;
+  videoMetaData.thumbnailURL = `${cfg.baseUrl}:${cfg.port}/${filePath}`;
 
   updateVideo(cfg.db, videoMetaData);
 
