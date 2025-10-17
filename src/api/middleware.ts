@@ -15,7 +15,7 @@ export function noCacheMiddleware(
   return async function (req: Request): Promise<Response> {
     const res = await next(req);
     const headers = new Headers(res.headers);
-    headers.set('Cache-Control', 'no-store');
+    headers.set('Cache-Control', 'max-age=3600');
 
     return new Response(res.body, {
       status: res.status,
