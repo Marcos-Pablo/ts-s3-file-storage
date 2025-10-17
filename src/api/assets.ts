@@ -7,3 +7,12 @@ export function ensureAssetsDir(cfg: ApiConfig) {
     mkdirSync(cfg.assetsRoot, { recursive: true });
   }
 }
+
+export function mediaTypeToExt(mediaType: string) {
+  const split = mediaType.split('/');
+  if (split.length !== 2) {
+    return 'bin';
+  }
+
+  return split[1];
+}
