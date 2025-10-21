@@ -1,6 +1,6 @@
 import { cfg } from './config';
 import { handlerLogin, handlerRefresh, handlerRevoke } from './api/auth';
-import { errorHandlingMiddleware, noCacheMiddleware, withConfig } from './api/middleware';
+import { errorHandlingMiddleware, cacheMiddleware, withConfig } from './api/middleware';
 import { handlerUsersCreate } from './api/users';
 import {
   handlerVideoGet,
@@ -57,7 +57,7 @@ Bun.serve({
     const path = url.pathname;
 
     if (path.startsWith('/assets')) {
-      return noCacheMiddleware(() => serveStaticFile(path.replace('/assets/', ''), cfg.assetsRoot))(req);
+      return cacheMiddleware(() => serveStaticFile(path.replace('/assets/', ''), cfg.assetsRoot))(req);
     }
 
     return new Response('Not Found', { status: 404 });

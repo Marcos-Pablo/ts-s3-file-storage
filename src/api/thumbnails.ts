@@ -44,19 +44,13 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   if (!mediaType || !ALLOWED_EXTENSIONS.includes(mediaType)) {
     throw new BadRequestError('Missing or invalid media type. Only JPEG or PNG allowed');
   }
+
   const fileExtension = mediaTypeToExt(mediaType);
-
-  const fileData = await file.arrayBuffer();
-  if (!fileData) {
-    throw new Error('Error reading file data');
-  }
-
-  const randomPrefix = randomBytes(32).toString('base64url');
-
-  const fileName = `${randomPrefix}.${fileExtension}`;
+  const randomIdentifier = randomBytes(32).toString('base64url');
+  const fileName = `${randomIdentifier}.${fileExtension}`;
   const filePath = path.join(cfg.assetsRoot, fileName);
 
-  await Bun.write(filePath, fileData);
+  await Bun.write(filePath, file);
 
   videoMetaData.thumbnailURL = `${cfg.baseUrl}:${cfg.port}/${filePath}`;
 
