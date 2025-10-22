@@ -49,19 +49,58 @@ export async function handlerUploadVideo(cfg: ApiConfig, req: BunRequest) {
   const fileExtension = mediaTypeToExt(mediaType);
 
   const randomIdentifier = randomBytes(32).toString('base64url');
-  const fileName = `${randomIdentifier}.${fileExtension}`;
-  const localFilePath = path.join(cfg.assetsRoot, fileName);
+  const localFileName = `${randomIdentifier}.${fileExtension}`;
+  const localFilePath = path.join(cfg.assetsRoot, localFileName);
 
   await Bun.write(localFilePath, videoFile);
   const localFile = Bun.file(localFilePath);
 
-  const s3file = cfg.s3Client.file(fileName, { type: mediaType });
+  const aspectRatio = await getVideoAspectRatio(localFilePath);
+  const s3FileName = `${aspectRatio}/${localFileName}`;
+
+  const s3file = cfg.s3Client.file(s3FileName, { type: mediaType });
   await s3file.write(localFile);
 
-  videoMetaData.videoURL = `https://${cfg.s3Bucket}.s3.${cfg.s3Region}.amazonaws.com/${fileName}`;
+  videoMetaData.videoURL = `https://${cfg.s3Bucket}.s3.${cfg.s3Region}.amazonaws.com/${s3FileName}`;
   updateVideo(cfg.db, videoMetaData);
 
   await localFile.delete();
 
   return respondWithJSON(200, null);
+}
+
+export async function getVideoAspectRatio(filePath: string) {
+  const proc = Bun.spawn(
+    [
+      'ffprobe',
+      '-v',
+      'error',
+      '-select_streams',
+      'v:0',
+      '-show_entries',
+      'stream=width,height',
+      '-of',
+      'json',
+      filePath,
+    ],
+    { stdout: 'pipe', stderr: 'pipe' },
+  );
+
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) {
+    const stderr = await new Response(proc.stderr).text();
+    throw new Error(`ffprobe error: ${stderr}`);
+  }
+
+  const stdout = await new Response(proc.stdout).json();
+
+  const { width, height } = stdout?.streams[0] ?? {};
+
+  if (!width || !height || typeof width !== 'number' || typeof height !== 'number') {
+    throw new Error('Failed to get video aspect ratio');
+  }
+
+  if (width === Math.floor(16 * (height / 9))) return 'landscape';
+  if (height === Math.floor(16 * (width / 9))) return 'portrait';
+  return 'other';
 }
